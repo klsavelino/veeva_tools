@@ -20,6 +20,8 @@ TIMEOUT = 20
 
 class Session:
     def __init__(self, driver_path: str = DEFAULT_DRIVER_PATH, download_path: str = DOWNLOAD_PATH):
+        # Classe Session
+        # Armazena as variáveis download_path, usr, pwd e driver
         
         try:
             CREDENTIALS = kr.get_credential(LOGIN_PAGE, None)
@@ -28,38 +30,37 @@ class Session:
 
         self.download_path = download_path
         
+        # Muda diretório padrão de downloads para DOWNLOAD_PATH ou para diretório
+        # especificado pelo usuário.
         
-        chrome_options = Options()
+        preferences = {'download.default_directory' : download_path,
+                       'download.prompt_for_download': False
+                 }
         
-        #preferences = {'download.default_directory' : download_path,
-        #         "download.prompt_for_download": False
-        #         }
+        opts = Options().add_experimental_option('prefs', preferences)
         
-        #opts = chrome_options.add_experimental_option('prefs', preferences)
-        
+
         self.usr = CREDENTIALS.username
         self.pwd = CREDENTIALS.password
-                
-        #driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
-        driver = Chrome(service=Service(executable_path=driver_path))
         
-        self.driver = driver
+        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
+        
         
         # Acessa a página de log-in
-        (driver.get(LOGIN_PAGE))
+        (self.driver.get(LOGIN_PAGE))
         
         # Localiza o input do e-mail
-        (WebDriverWait(driver, TIMEOUT)
+        (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.ID, 'username')))
          .send_keys(self.usr))
         
         # Localiza o input da senha
-        (WebDriverWait(driver, TIMEOUT)
+        (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.ID, 'password')))
          .send_keys(self.pwd))
 
         # Clica no botão de logar
-        (WebDriverWait(driver, TIMEOUT)
+        (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.ID, 'Login')))
          .click())
         
@@ -101,7 +102,7 @@ class Session:
             assert(result is not None)
 
         except:
-            raise Exception("Não foi possível acessar o report")
+            raise Exception("Não foi possível acessar o report.")
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
@@ -114,7 +115,7 @@ class Session:
                       .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
             self.driver.switch_to.frame(iframe)
         except:
-            print("Não foi poss~ivel")
+            raise Exception("Não foi possível encontrar o iFrame.")
         
         # Exibe as opções do dropdown
         (WebDriverWait(self.driver, TIMEOUT)
@@ -129,49 +130,48 @@ class Session:
         # Retorna ao contexto original
         self.driver.switch_to.default_content()
         
-        self.continuar()
         # Aguarda presença da opção de exportação de dados
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "label[for='data-export']")))
          .click())
-        
-        self.continuar()
+    
         
         # Aguarda a presença da opção do formato dos dados a serem exportados
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CLASS_NAME, "slds-form-element"))))
         
-        self.continuar()
         
         # Seleciona o formato .csv
         self.driver.execute_script("document.querySelector('.slds-select').value='localecsv';")
         
-        self.continuar()
-        
         # Lista todos os itens no diretório de download
         before = os.listdir(self.download_path)
         
-        print("CRIE O ARQUIVO TESTE")
-        self.continuar()
-        
         # Baixa o report
-        '''
+        self.close_all()
+        sys.exit()
+        return
+    
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[title='Export']")))
          .click())
-        '''
+              
         
         # Tempo de espera
-        time.sleep(10)
+        time.sleep(TIMEOUT)
         
         # Lista todos os itens no diretório de download
         after = os.listdir(self.download_path)
         
         # Diferença entre os snapshots
-        report_path = list(set(after) - set(before))
+        dir_list = list(set(after) - set(before))
+        
+        for file in dir_list:
+            if file.endswith(".csv"):
+                report_path = file
         
         # PATH do report
-        report_path = os.path.join(self.download_path, report_path[0])
+        report_path = os.path.join(self.download_path)
         
         print(report_path)
         
@@ -180,13 +180,6 @@ class Session:
     def close_all(self):
         self.driver.close()
         self.driver.quit()
-    
-    def continuar(self):
-        
-        response = int(input("continuar? pressione 1 para encerrar "))
-        
-        if response == 1:
-            self.close_all()
-            sys.exit()
+
                       
 
