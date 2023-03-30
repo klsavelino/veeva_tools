@@ -93,7 +93,7 @@ class Session:
         
         Retorna PATH absoluto report baixado.
         '''
-
+        
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.url_contains("/lightning/page/home")))
         
@@ -135,11 +135,19 @@ class Session:
         time.sleep(5)
         
         try:
-            iframe = (WebDriverWait(self.driver, TIMEOUT)
-                      .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
-            self.driver.switch_to.frame(iframe)
+            
+            iframe_element = self.driver.execute_script('return document.querySelector(".isView")')
+            
+            iframe_presence = False if iframe_element == None else True
+            
+            if iframe_presence:
+                iframe = (WebDriverWait(self.driver, TIMEOUT)
+                          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
+                self.driver.switch_to.frame(iframe)
+                print("Sucesso", "O elemento iframe foi localizado")
         except:
-            raise Exception("Não foi possível encontrar o iFrame.")
+            print("E006", "O iframe não foi localizado")
+            raise
         
         # Exibe as opções do dropdown
         (WebDriverWait(self.driver, TIMEOUT)
@@ -153,7 +161,8 @@ class Session:
         
         
         # Retorna ao contexto original
-        self.driver.switch_to.default_content()
+        if iframe_presence:
+            self.driver.switch_to.default_content()
         
         download_behavior = {
             "behavior": "allow",
@@ -178,9 +187,7 @@ class Session:
         # Seleciona o formato .csv
 
         Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")
-        
-        
-        
+                
         input()
         self.close_all()
         exit()
@@ -219,6 +226,8 @@ class Session:
         return report_path
         
     def close_all(self):
+        self.root.quit()
+        self.root.destroy()
         self.driver.close()
         self.driver.quit()
 
