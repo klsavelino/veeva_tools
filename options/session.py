@@ -15,7 +15,7 @@ import os
 
 LOGIN_PAGE = "https://login.salesforce.com/"
 DEFAULT_DRIVER_PATH = os.getcwd()
-DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp")
+DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
 TIMEOUT = 20
 
 
@@ -33,6 +33,9 @@ class Session:
         
         self.download_path = download_path
         
+        # Caso o dir não exista, ele será criado
+        if not os.path.exists(self.download_path):
+            os.makedirs(self.download_path)
         
         try:
             pwd = kr.get_password(kr_addr, kr_usr) # Resgata as credenciais
@@ -44,12 +47,14 @@ class Session:
         # especificado pelo usuário.
         
         '''
-        preferences = {'download.default_directory' : download_path,
-                       'download.prompt_for_download': False
+        preferences = {"download.default_directory" : download_path,
+                       "download.prompt_for_download": False,
+                       "intl.accept_languages":
                  }'''
         
-        opts = Options().add_experimental_option("prefs", {"devtools.download.default_directory": self.download_path})
-        
+        opts = Options()
+        opts.add_experimental_option("prefs", {"devtools.download.default_directory": self.download_path})
+
         self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
         
         '''
@@ -86,7 +91,7 @@ class Session:
         
         Ferramenta que resgata report usando o nome do mesmo passado como parâmetro.
         
-        Retorna PATH absoluto do local do report baixado.
+        Retorna PATH absoluto report baixado.
         '''
 
         (WebDriverWait(self.driver, TIMEOUT)
@@ -104,7 +109,7 @@ class Session:
     
         self.driver.get(BASE_URL)
         
-        time.sleep(3)
+        time.sleep(12)
         
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
@@ -142,9 +147,10 @@ class Session:
         .click())
         
         # Aguarda presença e clica na opção "Exportar" no dropdown
+        
         (WebDriverWait(self.driver, TIMEOUT)
-         .until(EC.presence_of_element_located((By.CSS_SELECTOR, "span[title='Export']")))
-         .click())
+         .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".report-action-ReportExportAction")))).find_element(By.CSS_SELECTOR, "*").click()
+        
         
         # Retorna ao contexto original
         self.driver.switch_to.default_content()
@@ -170,20 +176,20 @@ class Session:
         
         
         # Seleciona o formato .csv
-        #self.driver.execute_script("document.querySelector('.slds-select').click()")
-        #self.driver.execute_script("document.querySelector('.slds-select').value='localecsv';")
+
         Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")
         
         
         
         input()
+        self.close_all()
+        exit()
         
         
         # Lista todos os itens no diretório de download
         before = os.listdir(self.download_path)
         
         # Baixa o report
-    
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[title='Export']")))
          .click())
@@ -206,7 +212,7 @@ class Session:
             raise Exception("Não foi possível encontrar o arquivo criado.")
         
         # PATH do report
-        report_path = os.path.join(self.download_path)
+        report_path = os.path.join(self.download_path, report_path)
         
         print(report_path)
         
