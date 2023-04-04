@@ -16,11 +16,15 @@ import os
 LOGIN_PAGE = "https://login.salesforce.com/"
 DEFAULT_DRIVER_PATH = os.getcwd()
 DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
-TIMEOUT = 20
+TIMEOUT = 30
 
 
 class Session:
-    def __init__(self, kr_usr: str, kr_addr: str = LOGIN_PAGE,  driver_path: str = DEFAULT_DRIVER_PATH, download_path: str = DOWNLOAD_PATH):
+    def __init__(self,
+                 kr_usr: str, # Nome do username no Keyring
+                 kr_addr: str = LOGIN_PAGE, # Nome das credenciais no Keyring
+                 driver_path: str = DEFAULT_DRIVER_PATH, # Caminho para o chromedriver.exe
+                 download_path: str = DOWNLOAD_PATH): # Caminho desejado para download do report
         
         '''
         # Classe "Session" #
@@ -40,22 +44,18 @@ class Session:
         try:
             pwd = kr.get_password(kr_addr, kr_usr) # Resgata as credenciais
         except:
-            raise Exception("""Suas credenciais não foram devidamente armazenadas no gerenciador de credenciais do Windows.""")
-            exit()
+            print("""Suas credenciais não foram devidamente armazenadas no gerenciador de credenciais do Windows.""")
+            raise
 
         # Muda diretório padrão de downloads para DOWNLOAD_PATH ou para diretório
         # especificado pelo usuário.
         
-        '''
-        preferences = {"download.default_directory" : download_path,
-                       "download.prompt_for_download": False,
-                       "intl.accept_languages":
-                 }'''
-        
         opts = Options()
+        
         opts.add_experimental_option("prefs", {"devtools.download.default_directory": self.download_path})
-
-        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
+        
+        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts, port=9222)
+        
         
         '''
         # Automação de login #
@@ -84,7 +84,7 @@ class Session:
         print("Sessão iniciada")
         
         return
-    
+
     def get_report(self, report: str):
         '''
         # Método get_report(report) #
@@ -94,6 +94,7 @@ class Session:
         Retorna PATH absoluto report baixado.
         '''
         
+        # Aguarda página home carregar
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.url_contains("/lightning/page/home")))
         
@@ -109,8 +110,7 @@ class Session:
     
         self.driver.get(BASE_URL)
         
-        time.sleep(12)
-        
+        # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
         (WebDriverWait(self.driver, TIMEOUT)
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
          .send_keys(report))
@@ -125,8 +125,9 @@ class Session:
             result = re.search(regex, source, re.MULTILINE)
             assert(result is not None)
 
-        except:
-            raise Exception("Não foi possível acessar o report.")
+        except AssertionError:
+            print("Não foi possível acessar o report.")
+            raise
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
@@ -144,8 +145,9 @@ class Session:
                 iframe = (WebDriverWait(self.driver, TIMEOUT)
                           .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
                 self.driver.switch_to.frame(iframe)
-                print("Sucesso", "O elemento iframe foi localizado")
+                print("Sucesso, o elemento iframe foi localizado")
         except:
+            
             print("E006", "O iframe não foi localizado")
             raise
         
@@ -165,8 +167,10 @@ class Session:
             self.driver.switch_to.default_content()
         
         download_behavior = {
+            
             "behavior": "allow",
             "downloadPath": self.download_path
+            
             }
         
         self.driver.execute_cdp_cmd("Page.setDownloadBehavior", download_behavior)
@@ -190,7 +194,7 @@ class Session:
                 
         input()
         self.close_all()
-        exit()
+        sys.exit()
         
         
         # Lista todos os itens no diretório de download
@@ -226,8 +230,6 @@ class Session:
         return report_path
         
     def close_all(self):
-        self.root.quit()
-        self.root.destroy()
         self.driver.close()
         self.driver.quit()
 
