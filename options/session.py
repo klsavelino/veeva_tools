@@ -54,7 +54,7 @@ class Session:
         
         opts.add_experimental_option("prefs", {"devtools.download.default_directory": self.download_path})
         
-        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts, port=9222)
+        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
         
         
         '''
@@ -191,10 +191,6 @@ class Session:
         # Seleciona o formato .csv
 
         Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")
-                
-        input()
-        self.close_all()
-        sys.exit()
         
         
         # Lista todos os itens no diretório de download
@@ -202,9 +198,9 @@ class Session:
         
         # Baixa o report
         (WebDriverWait(self.driver, TIMEOUT)
-         .until(EC.presence_of_element_located((By.CSS_SELECTOR, "button[title='Export']")))
+         .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
          .click())
-              
+                     
         
         # Tempo de espera
         time.sleep(TIMEOUT)
