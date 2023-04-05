@@ -273,11 +273,11 @@ class Session:
     def _page_wait(self, timeout = DEFAULT_TIMEOUT):
         return self._element_wait(timeout).until(lambda driver: self.driver.execute_script("return document.readyState")=='complete')
     
-
-    def _close_all(self):
+    def end(self):
         self.driver.close()
         self.driver.quit()
         sys.exit()
+        print("Sessão encerrada.")
 
                       
 
