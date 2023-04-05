@@ -90,43 +90,60 @@ class Session:
 
     def get_report(self, report: str):
         
+        
         '''
         # Método get_report(report) #
         
         Ferramenta que resgata report usando o nome do mesmo passado como parâmetro.
         
         Retorna PATH absoluto report baixado.
+        
         '''
         
-        # Aguarda página home carregar
-        #(WebDriverWait(self.driver, TIMEOUT)
-        # .until(EC.url_contains("/lightning/page/home")))
+        
         
         url = self.driver.current_url
         url = url[:(url.find(".com")+4)]
         
+        
+        
         BASE_URL = url + REPORTS_PAGE
         
+        
+        
         del url
+        
+        
     
         self.driver.get(BASE_URL)
         
+        
+        
         self._page_wait()
+        
+        
         
         # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
          .send_keys(report))
         
+        
 
         self._page_wait()
         
+        
+        
         self._element_wait().until(lambda frame: self.driver.execute_script("return document.querySelector('.folderListView') ==  null") == False)
         
+        
+        # ! REMOVER ! E SUBSTITUIR POR DETECTOR DE ELEMENTO #
         time.sleep(10)
         
+        
+        
         try:
-            #source = self.driver.page_source()
+            
             source = self.driver.execute_script("return document.querySelector('.bodyContainer').innerHTML")
             assert(source is not None)
             
@@ -160,6 +177,7 @@ class Session:
                           .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
                 self.driver.switch_to.frame(iframe)
                 print("Sucesso, o elemento iframe foi localizado")
+                
         except:
             
             print("E006", "O iframe não foi localizado")
@@ -214,9 +232,6 @@ class Session:
         # Lista todos os itens no diretório de download
         before = os.listdir(self.download_path)
         
-        input()
-        self._close_all()
-        
         # Baixa o report
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
@@ -233,9 +248,13 @@ class Session:
         dir_list = list(set(after) - set(before))
         
         try:
+            
             for file in dir_list:
+                
                 if file.endswith(".csv"):
+                    
                     report_path = file
+                    
                     del file
         
         except:
