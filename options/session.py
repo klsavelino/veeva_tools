@@ -122,43 +122,53 @@ class Session:
         self._page_wait()
         
         
+        attempts = 1
         
-        # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
-        (self._element_wait()
-         .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
-         .send_keys(report))
-        
-        
-
-        self._page_wait()
-        
-        
-        
-        self._element_wait().until(lambda frame: self.driver.execute_script("return document.querySelector('.folderListView') ==  null") == False)
-        
-        
-        # ! REMOVER ! E SUBSTITUIR POR DETECTOR DE ELEMENTO #
-        time.sleep(10)
-        
-        
-        
-        try:
+        while attempts <= 3:
             
-            source = self.driver.execute_script("return document.querySelector('.bodyContainer').innerHTML")
-            assert(source is not None)
             
-        except AssertionError:
-            print("Não foi possível acessar o innerHTML para a consulta.")
-            raise
+            # ! TENTAR RETIRAR O SLEEP ! #
+            time.sleep(15)
             
-        try:
-            regex = r'<a href="(?:[^\\"]|\\\\|\\")*" title=\"' + report
-            result = re.search(regex, source, re.MULTILINE)
-            assert(result is not None)
+            # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
+            (self._element_wait()
+             .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
+             .send_keys(report))
+            
+            
+    
+            self._page_wait()
+            
+            
+            
+            self._element_wait().until(lambda frame: self.driver.execute_script("return document.querySelector('.folderListView') !=  null"))
+            
         
-        except AssertionError:
-            print("Não foi possível acessar referência do report via regex.")
-            raise
+            try:
+                
+                source = self.driver.execute_script("return document.querySelector('.bodyContainer').innerHTML")
+                assert(source is not None)
+                
+                
+            except AssertionError:
+                attempts += 1
+                print(f"Não foi possível acessar o innerHTML para a consulta na {attempts} tentativa.")
+                continue
+            
+            try:
+                regex = r'<a href="(?:[^\\"]|\\\\|\\")*" title=\"' + report
+                result = re.search(regex, source, re.MULTILINE)
+                assert(result is not None)
+                
+                break
+            
+            except AssertionError:
+                print("Não foi possível acessar referência do report via regex.")
+                attempts += 1
+                continue
+            
+            if attempts >= 3:
+                self.end()
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
@@ -222,24 +232,37 @@ class Session:
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".slds-select"))))
 
-        Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")
-        
-        '''
-        INSERIR FUNÇÃO DE ACOMPANHAMENTO DE PROGRESSO DE REPORT
-        '''
-        
+        Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")       
         
         # Lista todos os itens no diretório de download
         before = os.listdir(self.download_path)
         
         # Baixa o report
+        
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
          .click())
-                     
         
-        # Tempo de espera
-        time.sleep(DEFAULT_TIMEOUT)
+        
+        # Download para teste de progresso
+        # self.driver.get("https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsas/glp/glp-2004-02.csv")
+        
+        
+        self.driver.get("chrome://downloads/")    
+
+        self._page_wait()
+        
+        self._element_wait().until(lambda download: self.driver.execute_script("return document.getElementsByTagName('downloads-manager')[0].shadowRoot.querySelector('downloads-item') != null")) == True
+        
+        
+        download_start = time.time()
+        download_progress = 0
+        
+        while (download_progress < 100) or ((time.time() - download_start) < 10):
+            download_progress = (self.driver.execute_script('''var main_shadow_root = document.getElementsByTagName("downloads-manager")[0].shadowRoot;
+                                                            var progress_shadow_root = main_shadow_root.querySelector("downloads-item").shadowRoot;
+                                                            return progress_shadow_root.querySelector("#progress").value;'''))                                           
+        
         
         # Lista todos os itens no diretório de download
         after = os.listdir(self.download_path)
@@ -276,8 +299,9 @@ class Session:
     def end(self):
         self.driver.close()
         self.driver.quit()
-        sys.exit()
         print("Sessão encerrada.")
+        sys.exit()
+        
 
                       
 
