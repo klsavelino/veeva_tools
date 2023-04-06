@@ -7,7 +7,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 import keyring as kr
 import time
-import sys
 import re
 import os
 
@@ -84,7 +83,7 @@ class Session:
         
         self._page_wait()
         
-        print("Sessão iniciada")
+        print("Sessão iniciada.")
         
         return
 
@@ -101,39 +100,39 @@ class Session:
         '''
         
         
-        
+        # Resgata o URL base
         url = self.driver.current_url
         url = url[:(url.find(".com")+4)]
         
         
-        
+        # Constrói o URL da página de reports
         BASE_URL = url + REPORTS_PAGE
-        
-        
         
         del url
         
         
-    
-        self.driver.get(BASE_URL)
-        
-        
-        
-        self._page_wait()
-        
-        
-        attempts = 1
+        # De
+        attempts = 0
         
         while attempts <= 3:
             
+            # Navega até a página de reports
+            self.driver.get(BASE_URL)
+            
+            self._page_wait()
+            
             
             # ! TENTAR RETIRAR O SLEEP ! #
-            time.sleep(15)
+            time.sleep(5)
+            
             
             # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
             (self._element_wait()
              .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
              .send_keys(report))
+            
+            # ! TENTAR RETIRAR O SLEEP ! #
+            time.sleep(5)
             
             
     
@@ -151,8 +150,13 @@ class Session:
                 
                 
             except AssertionError:
+                
                 attempts += 1
-                print(f"Não foi possível acessar o innerHTML para a consulta na {attempts} tentativa.")
+                print(f"E001: Não foi possível acessar o innerHTML para a consulta na {attempts} tentativa.")
+                
+                if attempts >= 3:
+                    self.end()
+                
                 continue
             
             try:
@@ -163,12 +167,15 @@ class Session:
                 break
             
             except AssertionError:
-                print("Não foi possível acessar referência do report via regex.")
+                
                 attempts += 1
+                print(f"E007: Não foi possível acessar referência do report via regex na {attempts} tentativa.")
+                
+                if attempts >= 3:
+                    self.end()
+                
                 continue
             
-            if attempts >= 3:
-                self.end()
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
@@ -186,11 +193,9 @@ class Session:
                 iframe = (self._element_wait()
                           .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
                 self.driver.switch_to.frame(iframe)
-                print("Sucesso, o elemento iframe foi localizado")
                 
         except:
-            
-            print("E006", "O iframe não foi localizado")
+            print("E006: O iframe não foi localizado")
             raise
         
         # Exibe as opções do dropdown
@@ -258,11 +263,11 @@ class Session:
         download_start = time.time()
         download_progress = 0
         
-        while (download_progress < 100) or ((time.time() - download_start) < 10):
+        while (download_progress < 100) and ((time.time() - download_start) < 60):
             download_progress = (self.driver.execute_script('''var main_shadow_root = document.getElementsByTagName("downloads-manager")[0].shadowRoot;
                                                             var progress_shadow_root = main_shadow_root.querySelector("downloads-item").shadowRoot;
-                                                            return progress_shadow_root.querySelector("#progress").value;'''))                                           
-        
+                                                            return progress_shadow_root.querySelector("#progress").value;'''))                                        
+
         
         # Lista todos os itens no diretório de download
         after = os.listdir(self.download_path)
@@ -281,6 +286,7 @@ class Session:
                     del file
         
         except:
+            print("E003: Erro de download.")
             raise
         
         # PATH do report
@@ -296,11 +302,15 @@ class Session:
     def _page_wait(self, timeout = DEFAULT_TIMEOUT):
         return self._element_wait(timeout).until(lambda driver: self.driver.execute_script("return document.readyState")=='complete')
     
-    def end(self):
+    def __del__(self):
         self.driver.close()
         self.driver.quit()
         print("Sessão encerrada.")
-        sys.exit()
+        
+    def end(self):
+        self.driver.close()
+        self.driver.quit()
+        self.__del__()
         
 
                       
