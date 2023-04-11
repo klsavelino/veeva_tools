@@ -7,6 +7,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 import keyring as kr
 import time
+import sys
 import re
 import os
 
@@ -16,6 +17,11 @@ LOGIN_PAGE = "https://login.salesforce.com/"
 DEFAULT_DRIVER_PATH = os.getcwd()
 DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
 DEFAULT_TIMEOUT = 30
+
+
+# Script bat de ativação
+
+
 
 
 class Session:
@@ -64,7 +70,6 @@ class Session:
         
         # Acessa a página de log-in
         (self.driver.get(LOGIN_PAGE))
-        
         
         # Localiza o input do e-mail e envia a credencial
         (self._element_wait()
@@ -155,7 +160,7 @@ class Session:
                 print(f"E001: Não foi possível acessar o innerHTML para a consulta na {attempts} tentativa.")
                 
                 if attempts >= 3:
-                    self.end()
+                    sys.exit()
                 
                 continue
             
@@ -172,10 +177,10 @@ class Session:
                 print(f"E007: Não foi possível acessar referência do report via regex na {attempts} tentativa.")
                 
                 if attempts >= 3:
-                    self.end()
+                    sys.exit()
                 
                 continue
-            
+                   
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
@@ -287,6 +292,7 @@ class Session:
         
         except:
             print("E003: Erro de download.")
+        
             raise
         
         # PATH do report
@@ -308,8 +314,6 @@ class Session:
         print("Sessão encerrada.")
         
     def end(self):
-        self.driver.close()
-        self.driver.quit()
         self.__del__()
         
 
