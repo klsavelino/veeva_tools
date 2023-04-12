@@ -14,7 +14,7 @@ import os
 
 REPORTS_PAGE = "/lightning/o/Report/home?queryScope=everything"
 LOGIN_PAGE = "https://login.salesforce.com/"
-DEFAULT_DRIVER_PATH = os.getcwd()
+DEFAULT_DRIVER_PATH = "P:\ChromeDriver\chromedriver.exe"
 DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
 DEFAULT_TIMEOUT = 30
 
