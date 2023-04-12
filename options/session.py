@@ -11,7 +11,6 @@ import sys
 import re
 import os
 
-
 REPORTS_PAGE = "/lightning/o/Report/home?queryScope=everything"
 LOGIN_PAGE = "https://login.salesforce.com/"
 DEFAULT_DRIVER_PATH = "P:\ChromeDriver\chromedriver.exe"
@@ -19,6 +18,7 @@ DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local"
 DEFAULT_TIMEOUT = 30
 
 class Session:
+    
     def __init__(self,
                  kr_usr: str, # Nome do username no Keyring
                  kr_addr: str = LOGIN_PAGE, # Nome das credenciais no Keyring
@@ -109,7 +109,6 @@ class Session:
         
         del url
         
-        
         # De
         attempts = 0
         
@@ -123,8 +122,7 @@ class Session:
             
             # ! TENTAR RETIRAR O SLEEP ! #
             time.sleep(5)
-            
-            
+                        
             # Aguarda presença de input de texto onde irá ser inserido o report para a pesquisa
             (self._element_wait()
              .until(EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='text']")))
@@ -141,7 +139,7 @@ class Session:
             
             self._element_wait().until(lambda frame: self.driver.execute_script("return document.querySelector('.folderListView') !=  null"))
             
-        
+            
             try:
                 
                 source = self.driver.execute_script("return document.querySelector('.bodyContainer').innerHTML")
@@ -155,7 +153,7 @@ class Session:
                 
                 if attempts >= 3:
                     sys.exit()
-                
+            
                 continue
             
             try:
@@ -249,6 +247,9 @@ class Session:
         
         # Baixa o report
         
+        input()
+        self.end()
+        
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
          .click())
@@ -278,6 +279,7 @@ class Session:
         after = os.listdir(self.download_path)
         
         # Diferença entre os snapshots
+        
         dir_list = list(set(after) - set(before))
         
         try:
