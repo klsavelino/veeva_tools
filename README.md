@@ -1,4 +1,4 @@
-﻿# veeva_tools
+﻿# veeva_tools (srv)
 
 Este módulo é especificamente projetado para web scraping de dados do site Veeva. Ele foi criado a fim de automatizar uma série de tarefas manuais e trabalhosas e, até o momento, pode somente baixar _reports_. O projeto está aberto para sugestões de funcionalidades.
 
@@ -17,12 +17,12 @@ Session(**kr_usr**: str, _[**kr_addr** = str]_, _[**driver_path** = str]_, _[**d
 - **download_path** _(opcional)_: O caminho onde o relatório deve ser baixado. Por padrão, é definido como “C:\Users\\<USER\>\AppData\Local\Temp\TEMPDIR”
 
 #### Exemplo de uso
-Uso comum
+##### Uso comum
 ```
 veeva_tools.Session(kr_usr = "usuario@email.com", kr_addr = "Usuário Veeva 1", driver_path = "C:\ChromeDriver\chromedriver.exe", download_path = "C:\Users\<Usuário>\Documentos\Projeto1")
 ```
-Uso direto
-
+##### Uso direto
+Veja mais sobre o [uso direto](README.md##Uso-direto)
 ```
 veeva_tools -u "usuario@email.com" -a "Usuário Veeva 1" -c "C:\ChromeDriver\chromedriver.exe" -d "C:\Users\<Usuário>\Documentos\Projeto1")
 ```
@@ -47,18 +47,19 @@ Após os argumentos da inicialização da classe:
 Este método retorna o caminho absoluto do _report_ baixado.
 
 #### Exemplo de uso
-Uso comum:
+##### Uso comum:
 ```
 veeva_tools.Session(...).get_report("Report1")
 ```
-Uso direto:
+##### Uso direto
+Veja mais sobre o [uso direto](README.md##Uso-direto)
 ```
 veeva_tools ... get_report -r Report1
 ```
 
 ## Uso direto
 
-É possível utilizar o módulo diretamente da linha de comando conforme o seguinte
+É possível utilizar o módulo diretamente da linha de comando conforme o seguinte:
 
 **cmd.exe**
 ```veeva_tools <script.py> -u [-a ou -kr_addr] [-c ou --driver_path] [-d ou --download_path]```
@@ -67,3 +68,4 @@ veeva_tools ... get_report -r Report1
 -   `-a` ou `--kr_addr` _(opcional)_: **kr_addr**
 -   `-c` ou `--driver_path` _(opcional)_: **driver_path**
 -   `-d` ou `--download_path` _(opcional)_: **download_path**
+
