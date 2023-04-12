@@ -18,12 +18,6 @@ DEFAULT_DRIVER_PATH = os.getcwd()
 DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
 DEFAULT_TIMEOUT = 30
 
-
-# Script bat de ativação
-
-
-
-
 class Session:
     def __init__(self,
                  kr_usr: str, # Nome do username no Keyring
@@ -188,20 +182,25 @@ class Session:
         
         self._page_wait()
         
+        
         try:
             
-            iframe_element = self.driver.execute_script('return document.querySelector(".isView")')
+            iframe_element = self.driver.execute_script('return document.getElementsByTagName("iframe").length')
             
-            iframe_presence = False if iframe_element == None else True        
+            iframe_presence = False if iframe_element == 0 else True
             
             if iframe_presence:
                 iframe = (self._element_wait()
-                          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".isView"))))
+                          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".reportsReportBuilder"))))
+                
                 self.driver.switch_to.frame(iframe)
                 
         except:
             print("E006: O iframe não foi localizado")
             raise
+            
+        
+        
         
         # Exibe as opções do dropdown
         (self._element_wait()
@@ -209,6 +208,7 @@ class Session:
         .click())
         
         # Aguarda presença e clica na opção "Exportar" no dropdown
+        
         
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".report-action-ReportExportAction")))).find_element(By.CSS_SELECTOR, "*").click()
