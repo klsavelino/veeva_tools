@@ -3,6 +3,7 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
+from veeva_tools._utils._helpers import _std_log
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 import keyring as kr
@@ -85,7 +86,7 @@ class Session:
         print("Sessão iniciada.")
         
         return
-
+    @_std_log
     def get_report(self, report: str):
         
         
