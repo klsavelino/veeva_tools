@@ -7,7 +7,7 @@ Este módulo é especificamente projetado para web scraping de dados do site Vee
 
 Esta classe é usada para criar uma sessão do Veeva para coletar dados do site. É necessário fornecer as informações de login e outras configurações para criar uma sessão.
 
-Session(**kr_usr**: str, _[**kr_addr** = str]_, _[**driver_path** = str]_, _[**download_path**: str]_)
+Session(**kr_usr**: str, _[**kr_addr**: str]_, _[**driver_path**: str]_, _[**download_path**: str]_)
 
 #### Parâmetros de inicialização
 
@@ -22,7 +22,7 @@ Session(**kr_usr**: str, _[**kr_addr** = str]_, _[**driver_path** = str]_, _[**d
 veeva_tools.Session(kr_usr = "usuario@email.com", kr_addr = "Usuário Veeva 1", driver_path = "C:\ChromeDriver\chromedriver.exe", download_path = "C:\Users\<Usuário>\Documentos\Projeto1")
 ```
 ##### Uso direto
-Veja mais sobre o [uso direto](README.md##Uso-direto)
+Veja mais sobre o [uso direto](##Uso-direto)
 ```
 veeva_tools -u "usuario@email.com" -a "Usuário Veeva 1" -c "C:\ChromeDriver\chromedriver.exe" -d "C:\Users\<Usuário>\Documentos\Projeto1")
 ```
