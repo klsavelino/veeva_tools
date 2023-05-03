@@ -88,9 +88,6 @@ def cli():
     
     
     print(session_args)
-    
-    print("retornando")
-    
     return
 
 if __name__ == "__main__":

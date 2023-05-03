@@ -3,7 +3,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
-from veeva_tools._utils._helpers import _std_log
 from selenium.webdriver.common.by import By
 from selenium.webdriver import Chrome
 import keyring as kr
@@ -16,7 +15,7 @@ REPORTS_PAGE = "/lightning/o/Report/home?queryScope=everything"
 LOGIN_PAGE = "https://login.salesforce.com/"
 DEFAULT_DRIVER_PATH = "P:\ChromeDriver\chromedriver.exe"
 DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
-DEFAULT_TIMEOUT = 30
+DEFAULT_TIMEOUT = 120
 
 class Session:
     
@@ -86,9 +85,8 @@ class Session:
         print("Sessão iniciada.")
         
         return
-    @_std_log
+    
     def get_report(self, report: str):
-        
         
         '''
         # Método get_report(report) #
@@ -97,8 +95,7 @@ class Session:
         
         Retorna PATH absoluto report baixado.
         
-        '''
-        
+        '''        
         
         # Resgata o URL base
         url = self.driver.current_url
@@ -177,29 +174,13 @@ class Session:
         
         result = result.group(0).split('"')[1] # Retorna apenas link
         
-        self.driver.get(result)
-        
+        self.driver.get(result)   
         self._page_wait()
         
-        
-        try:
-            
-            iframe_element = self.driver.execute_script('return document.getElementsByTagName("iframe").length')
-            
-            iframe_presence = False if iframe_element == 0 else True
-            
-            if iframe_presence:
-                iframe = (self._element_wait()
-                          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".reportsReportBuilder"))))
-                
-                self.driver.switch_to.frame(iframe)
-                
-        except:
-            print("E006: O iframe não foi localizado")
-            raise
-            
-        
-        
+        # Aguarda a renderização do iframe com o conteudo do report
+        iframe = self._element_wait() \
+            .until(EC.presence_of_element_located((By.CSS_SELECTOR,"iframe:first-of-type")))
+        self.driver.switch_to.frame(iframe.get_attribute('name'))
         
         # Exibe as opções do dropdown
         (self._element_wait()
@@ -207,100 +188,53 @@ class Session:
         .click())
         
         # Aguarda presença e clica na opção "Exportar" no dropdown
-        
-        
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".report-action-ReportExportAction")))).find_element(By.CSS_SELECTOR, "*").click()
-        
-        
+                
         # Retorna ao contexto original
-        if iframe_presence:
-            self.driver.switch_to.default_content()
+        self.driver.switch_to.default_content()
         
-        download_behavior = {
-            
-            "behavior": "allow",
-            "downloadPath": self.download_path
-            
-            }
-        
+        # Configura Diretorio de download
+        download_behavior={"behavior":"allow", "downloadPath":self.download_path}
         self.driver.execute_cdp_cmd("Page.setDownloadBehavior", download_behavior)
         
         # Aguarda presença da opção de exportação de dados
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, "label[for='data-export']")))
          .click())
-    
-        
+            
         # Aguarda a presença da opção do formato dos dados a serem exportados
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CLASS_NAME, "slds-form-element"))))
-        
-        
+                
         # Seleciona o formato .csv
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".slds-select"))))
-
         Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")       
-        
-        # Lista todos os itens no diretório de download
-        before = os.listdir(self.download_path)
-        
+                
         # Baixa o report
-        
-        input()
-        self.end()
-        
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
          .click())
-        
-        
-        # Download para teste de progresso
-        # self.driver.get("https://www.gov.br/anp/pt-br/centrais-de-conteudo/dados-abertos/arquivos/shpc/dsas/glp/glp-2004-02.csv")
-        
-        
+   
+        # Monitorando o Download
         self.driver.get("chrome://downloads/")    
-
         self._page_wait()
-        
         self._element_wait().until(lambda download: self.driver.execute_script("return document.getElementsByTagName('downloads-manager')[0].shadowRoot.querySelector('downloads-item') != null")) == True
-        
-        
-        download_start = time.time()
-        download_progress = 0
-        
-        while (download_progress < 100) and ((time.time() - download_start) < 60):
-            download_progress = (self.driver.execute_script('''var main_shadow_root = document.getElementsByTagName("downloads-manager")[0].shadowRoot;
-                                                            var progress_shadow_root = main_shadow_root.querySelector("downloads-item").shadowRoot;
-                                                            return progress_shadow_root.querySelector("#progress").value;'''))                                        
-
-        
-        # Lista todos os itens no diretório de download
-        after = os.listdir(self.download_path)
-        
-        # Diferença entre os snapshots
-        
-        dir_list = list(set(after) - set(before))
-        
-        try:
-            
-            for file in dir_list:
                 
-                if file.endswith(".csv"):
-                    
-                    report_path = file
-                    
-                    del file
-        
-        except:
-            print("E003: Erro de download.")
-        
-            raise
-        
-        # PATH do report
-        report_path = os.path.join(self.download_path, report_path)
-        
+        download_start = time.time()
+        download_progress = 0        
+        while (download_progress<100) and ((time.time() - download_start) < DEFAULT_TIMEOUT):
+            download_progress = (self.driver.execute_script('''
+                var main_shadow_root = document.getElementsByTagName("downloads-manager")[0].shadowRoot;
+                var progress_shadow_root = main_shadow_root.querySelector("downloads-item").shadowRoot;
+                return progress_shadow_root.querySelector("#progress").value;
+            '''))
+            time.sleep(1)    
+
+        # Obtendo nome do arquivo baixado
+        filename=self.driver.execute_script('return document.querySelector("body > downloads-manager").shadowRoot.querySelector("#frb0").shadowRoot.querySelector("#name").innerHTML')
+        report_path = os.path.join(self.download_path,filename)
         print(report_path)
         
         return report_path
