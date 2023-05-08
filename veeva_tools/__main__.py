@@ -1,3 +1,3 @@
-from ..veeva_tools import cli
+from .tools.cli import cli
 
 cli() 
