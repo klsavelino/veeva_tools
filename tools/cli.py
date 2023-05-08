@@ -1,4 +1,4 @@
-from veeva_tools import Session
+from ..options.session import Session
 import sys
 import argparse
 
