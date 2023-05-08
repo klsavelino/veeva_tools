@@ -9,8 +9,8 @@ setup(
     author="Alícia Avelino",
     author_email="aliciamel@ufrrj.br",
     license="MIT",
-    packages=find_packages(),
-    package_dir="veeva_tools",
+    package_dir={"": "veeva_tools"},
+    packages=find_packages(where="veeva_tools"),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
