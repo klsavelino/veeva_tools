@@ -10,6 +10,7 @@ setup(
     author_email="aliciamel@ufrrj.br",
     license="MIT",
     packages=find_packages(),
+    package_dir={"": "veeva_tools"},
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
