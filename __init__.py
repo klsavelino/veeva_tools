@@ -1,3 +1,3 @@
-from .options.session import Session
-from .tools.cli import cli
+from veeva_tools import Session
+from veeva_tools import cli
 
