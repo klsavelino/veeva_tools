@@ -9,7 +9,7 @@ setup(
     author="Alícia Avelino",
     author_email="aliciamel@ufrrj.br",
     license="MIT",
-    package_dir={"veeva_tools": "veeva_tools"},
+    namespace_packages=["veeva_tools"],
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
