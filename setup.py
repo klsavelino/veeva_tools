@@ -1,6 +1,4 @@
-from setuptools import setup, find_packages, find_namespace_packages
-import os
-
+from setuptools import setup, find_packages
 
 setup(
     name="veeva_tools",
@@ -11,7 +9,7 @@ setup(
     author="Alícia Avelino",
     author_email="aliciamel@ufrrj.br",
     license="MIT",
-    packages=["veeva_tools", "veeva_tools.tools", "veeva_tools.options"],
+    packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
