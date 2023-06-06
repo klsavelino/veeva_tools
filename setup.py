@@ -4,7 +4,7 @@ setup(
     name="veeva_tools",
     version="1.0.0",
     description="Toolkit para o Veeva.",
-    long_description=open(f"veeva_tools/README.md").read(),
+    long_description=open(f"veeva_tools/README.md", encoding='utf-8').read(),
     url="https://github.com/klsavelino/veeva_tools",
     author="Alícia Avelino",
     author_email="aliciamel@ufrrj.br",
