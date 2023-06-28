@@ -1,5 +1,6 @@
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import Select
@@ -13,7 +14,6 @@ import os
 
 REPORTS_PAGE = "/lightning/o/Report/home?queryScope=everything"
 LOGIN_PAGE = "https://login.salesforce.com/"
-DEFAULT_DRIVER_PATH = "P:\ChromeDriver\chromedriver.exe"
 DEFAULT_DOWNLOAD_PATH = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Temp", "TEMPDIR")
 DEFAULT_TIMEOUT = 120
 
@@ -22,7 +22,7 @@ class Session:
     def __init__(self,
                  kr_usr: str, # Nome do username no Keyring
                  kr_addr: str = LOGIN_PAGE, # Nome das credenciais no Keyring
-                 driver_path: str = DEFAULT_DRIVER_PATH, # Caminho para o chromedriver.exe
+                 driver_path: str = None, # Caminho para o chromedriver.exe
                  download_path: str = DEFAULT_DOWNLOAD_PATH): # Caminho desejado para download do report
         
         '''
@@ -52,8 +52,12 @@ class Session:
         opts = Options()
         
         opts.add_experimental_option("prefs", {"devtools.download.default_directory": self.download_path})
+
+        if driver_path is None:
+            driver_path = ChromeDriverManager().install()
+
+        self.driver = Chrome(service=Service(executable_path=driver_path), options=opts)
         
-        self.driver = Chrome(service=Service(executable_path=driver_path),chrome_options=opts)
         
         
         '''
@@ -211,7 +215,8 @@ class Session:
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".slds-select"))))
         Select(self.driver.find_element(By.CSS_SELECTOR, ".slds-select")).select_by_value("localecsv")       
-                
+        input()
+        exit()
         # Baixa o report
         (self._element_wait()
          .until(EC.presence_of_element_located((By.CSS_SELECTOR, ".uiButton--brand")))
@@ -252,7 +257,7 @@ class Session:
         
     def end(self):
         self.__del__()
+
+if __name__ == "__main__":
+    Session("jose.maselo@servier.latam").get_report("CLM_Slides")
         
-
-                      
-
